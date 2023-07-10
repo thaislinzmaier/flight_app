@@ -69,6 +69,9 @@ public class MainActivity extends AppCompatActivity{
     private TextView resultTextView;
 
     private Button btnGps;
+    private Button btnMostraVoo;
+
+    private Button btnMostraVoosSalvos;
     private TextView txtLatitude, txtLongitude;
 
     @Override
@@ -76,12 +79,27 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        new FetchFlightsTask().execute();
-
         bd = new BDSQLiteHelper(this);
 
         txtLatitude = (TextView) findViewById(R.id.txtLatitude);
         txtLongitude = (TextView) findViewById(R.id.txtLongitude);
+
+        btnMostraVoosSalvos = (Button) findViewById(R.id.btnMostraVoosSalvos);
+
+        btnMostraVoosSalvos.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mostraListaVoosSalvos();
+            }
+        });
+
+        btnMostraVoo = (Button) findViewById(R.id.btnMostraVoos);
+        btnMostraVoo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mostraListaVoos();
+            }
+        });
 
         btnGps = (Button) findViewById(R.id.btnGps);
         btnGps.setOnClickListener(new Button.OnClickListener() {
@@ -90,37 +108,11 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        ArrayList<Flights> savedFlights = bd.getAllVoos();
-        for (Flights flight : savedFlights) {
-            Log.d(TAG, "ID: " + flight.getId() + ", Aeroporto Chegada: " + flight.getAeroportoChegada());
-        }
-
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, FlightsActivity.class);
-                startActivity(intent);
-            }
-        });*/
-
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         resultTextView = findViewById(R.id.resultTextView);
 
         setSupportActionBar(binding.toolbar);
-
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        /*binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
     }
 
     private void pedirPermissoes() {
@@ -135,8 +127,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1: {
@@ -184,23 +175,34 @@ public class MainActivity extends AppCompatActivity{
     protected void onStart() {
         super.onStart();
 
+    }
+    public void mostraListaVoosSalvos(){
+        ArrayList<Flights> savedFlights = bd.getAllVoos();
+        for (Flights flight : savedFlights) {
+            Log.d("TAG", "ID: " + flight.getId() + ", Aeroporto Chegada: " + flight.getAeroportoChegada());
+        }
+
+    }
+
+    public void mostraListaVoos(){
+
+        new FetchFlightsTask().execute();
+
         ListView lista = (ListView) findViewById(R.id.lvVoos);
 
         listaVoos = bd.getAllVoos();
 
         FlightsAdapter adapter = new FlightsAdapter(this, listaVoos);
-        lista.setAdapter(adapter);
-        lista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                Intent intent = new Intent(MainActivity.this, EditarVooActivity.class);
-                intent.putExtra("ID", listaVoos.get(position).getId());
-                startActivity(intent);
-            }
-        });
+            lista.setAdapter(adapter);
+            lista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Intent intent = new Intent(MainActivity.this, EditarVooActivity.class);
+                    intent.putExtra("ID", listaVoos.get(position).getId());
+                    startActivity(intent);
+                }
+            });
     }
-    private static final String TAG = "MainActivity";
 
     private ArrayList<Flights> processJsonResponse(String jsonData) {
         ArrayList<Flights> flights = new ArrayList<>();
@@ -224,7 +226,7 @@ public class MainActivity extends AppCompatActivity{
                 flights.add(flight);
             }
         } catch (JSONException e) {
-            Log.e(TAG, "Erro ao processar JSON: " + e.getMessage());
+            Log.e("TAG", "Erro ao processar JSON: " + e.getMessage());
         }
 
         return flights;
@@ -232,11 +234,9 @@ public class MainActivity extends AppCompatActivity{
 
     private void saveFlightsToDatabase(ArrayList<Flights> flights) {
         for (Flights flight : flights) {
-            // Salvar o objeto Flight no banco de dados
             bd.addVoo(flight);
         }
     }
-
 
     private class FetchFlightsTask extends AsyncTask<Void, Void, String> {
 
@@ -259,10 +259,10 @@ public class MainActivity extends AppCompatActivity{
                     return resultados;
 
                 } else {
-                    Log.e(TAG, "Erro na solicitação: " + response.code() + " - " + response.message());
+                    Log.e("TAG", "Erro na solicitação: " + response.code() + " - " + response.message());
                 }
             } catch (IOException e) {
-                Log.e(TAG, "Erro na solicitação: " + e.getMessage());
+                Log.e("TAG", "Erro na solicitação: " + e.getMessage());
             }
 
             return null;
@@ -273,7 +273,7 @@ public class MainActivity extends AppCompatActivity{
         @Override
         protected void onPostExecute(String resultados) {
             if (resultados != null) {
-                Log.d(TAG, "Resultado da chamada à API: " + resultados);
+                Log.d("TAG", "Resultado da chamada à API: " + resultados);
                 resultTextView.setText(resultados);
                 // Processar e exibir os dados da resposta da API
             } else {
@@ -285,30 +285,17 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
     }
 }
