@@ -1,26 +1,35 @@
 package com.example.flight_app;
 
-import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+
+import androidx.annotation.Nullable;
+
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.Manifest;
 
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -39,18 +48,24 @@ import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.json.JSONObject;
+
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+
 import android.util.Log;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
@@ -58,8 +73,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONObject;
-public class MainActivity extends AppCompatActivity{
 
+
+
+public class MainActivity extends AppCompatActivity {
+
+    private static final int PERMISSIONS_REQUEST_LOCATION = 1;
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
 
@@ -68,11 +87,11 @@ public class MainActivity extends AppCompatActivity{
 
     private TextView resultTextView;
 
-    private Button btnGps;
+     private Button btnGps;
     private Button btnMostraVoo;
-
     private Button btnMostraVoosSalvos;
-    private TextView txtLatitude, txtLongitude;
+     private TextView txtLatitude, txtLongitude;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +100,16 @@ public class MainActivity extends AppCompatActivity{
 
         bd = new BDSQLiteHelper(this);
 
-        txtLatitude = (TextView) findViewById(R.id.txtLatitude);
-        txtLongitude = (TextView) findViewById(R.id.txtLongitude);
+
+          txtLatitude = (TextView) findViewById(R.id.txtLatitude);
+          txtLongitude = (TextView) findViewById(R.id.txtLongitude);
+
+         btnGps = (Button) findViewById(R.id.btnGps);
+        btnGps.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                pedirPermissoes();
+            }
+        });
 
         btnMostraVoosSalvos = (Button) findViewById(R.id.btnMostraVoosSalvos);
 
@@ -98,13 +125,6 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 mostraListaVoos();
-            }
-        });
-
-        btnGps = (Button) findViewById(R.id.btnGps);
-        btnGps.setOnClickListener(new Button.OnClickListener() {
-            public void onClick(View v) {
-                pedirPermissoes();
             }
         });
 
@@ -128,7 +148,7 @@ public class MainActivity extends AppCompatActivity{
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+       // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case 1: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -162,6 +182,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+
     public void atualizar(Location location)
     {
         Double latPoint = location.getLatitude();
@@ -170,6 +191,7 @@ public class MainActivity extends AppCompatActivity{
         txtLatitude.setText(latPoint.toString());
         txtLongitude.setText(lngPoint.toString());
     }
+
 
     @Override
     protected void onStart() {
